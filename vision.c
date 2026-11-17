@@ -5,16 +5,41 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <threads.h>
 #include <unistd.h>
 #include <SDL2/SDL.h>
 
 const int WIDTH = 900;
 const int HEIGHT = 600;
 
+#define SIZE 128
+
+void setCell(uint8_t grid[SIZE][SIZE], int row, int col, uint8_t value) {
+    if (row >= 0 && row < SIZE && col >= 0 && col < SIZE) {
+        grid[row][col] = value;
+    }
+}
+
 void move_rect(SDL_Rect *prect, SDL_KeyCode key) {
 	switch (key) {
 		case SDLK_w:
-		prect->y -= 10;
+			prect->y -= 10;
+			printf("moving with w...\n");
+			break;
+		case SDLK_a:
+			prect->x -= 10;
+			printf("moving with a...\n");
+			break;
+		case SDLK_s:
+			prect->y += 10;
+			printf("moving with s...\n");
+			break;
+		case SDLK_d:
+			prect->x += 10;
+			printf("moving with d...\n");
+			break;
+		default:
+			break;
 	}
 }
 
@@ -27,21 +52,10 @@ int main(int argc, char *argv[])
 
 	SDL_Rect rect = {100, 100, 100, 100};
 
+	uint8_t matrix[SIZE][SIZE] = {0};
+
 
 	int running = 1;
-	//size of vision grid
-	int n = 128;
-	int *vision_grid = (int *)malloc(n * n * sizeof(int));
-
-	if (vision_grid != NULL) {
-		for (int i = 0; i > n; i++) {
-			for (int j = 0; j > n; j++) {
-					vision_grid[i * n * j] = 0;
-}
-			
-		}
-	
-	}
 
 	while (running) {
 		SDL_Event event;
@@ -51,7 +65,7 @@ int main(int argc, char *argv[])
 			} 
 
 			if (event.type == SDL_KEYDOWN) {
-				
+				move_rect(&rect, event.key.keysym.sym);
 			}
 
 		}
