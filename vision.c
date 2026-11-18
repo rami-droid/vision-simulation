@@ -7,7 +7,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <threads.h>
 #include <time.h>
 #include <unistd.h>
 #include <SDL2/SDL.h>
@@ -15,7 +14,7 @@
 const int WIDTH = 1024;
 const int HEIGHT = 1024;
 
-#define SIZE 128
+#define SIZE 64
 #define NSMULT 1000
 
 struct player{
@@ -44,12 +43,12 @@ int is_in_center(int col, int row, struct player *pplayer){
 	return 0;
 }
 
-void calculate_vision(uint8_t grid[SIZE][SIZE], struct player *pplayer) {
+void calculate_vision(uint8_t vision[SIZE][SIZE], struct player *pplayer) {
 
 	for (int i = 0; i < SIZE; i++) {
 		for (int j = 0; j < SIZE; j++) {
-			if (grid[i][j] != 2) {
-				grid[i][j] = 0;
+			if (vision[i][j] != 2) {
+				vision[i][j] = 0;
 			}
 		}
 	}
@@ -71,8 +70,8 @@ void calculate_vision(uint8_t grid[SIZE][SIZE], struct player *pplayer) {
 		for (int j = start_col; j <= end_col; j++) {
 
 			if (is_in_center(j, i, pplayer)) {
-			if (grid[i][j] != 2) {
-				grid[i][j] = 1;
+			if (vision[i][j] != 2) {
+				vision[i][j] = 1;
 			}
 			}
 		}
@@ -110,7 +109,6 @@ void move_player(struct player *pplayer, uint8_t matrix[SIZE][SIZE], SDL_KeyCode
 }
 
 void draw_grid(uint8_t grid[SIZE][SIZE], SDL_Renderer *prender){
-
 	SDL_Rect cellRect;
 	cellRect.w = WIDTH/SIZE;
 	cellRect.h = HEIGHT/SIZE;
@@ -121,13 +119,37 @@ void draw_grid(uint8_t grid[SIZE][SIZE], SDL_Renderer *prender){
 
 			switch (grid[i][j]) {
 				case 0:
-					SDL_SetRenderDrawColor(prender, 0, 0, 0, 255);
+					SDL_SetRenderDrawColor(prender, 0, 255, 0, 255);
 					break;
 				case 1:
-					SDL_SetRenderDrawColor(prender, 255, 255, 255, 255);
+					SDL_SetRenderDrawColor(prender, 0, 000, 255, 255);
 					break;
 				case 2:
 					SDL_SetRenderDrawColor(prender, 255, 0, 0, 255);
+					break;
+			}
+			SDL_RenderFillRect(prender, &cellRect);
+		}
+	}
+	
+}
+
+void draw_vision(uint8_t vision[SIZE][SIZE], SDL_Renderer *prender){
+
+	SDL_Rect cellRect;
+	cellRect.w = WIDTH/SIZE;
+	cellRect.h = HEIGHT/SIZE;
+	for (int i = 0; i<SIZE; i++) {
+		for (int j = 0; j<SIZE; j++) {
+			cellRect.x = j * WIDTH/SIZE;
+			cellRect.y = i * HEIGHT/SIZE;
+
+			switch (vision[i][j]) {
+				case 0:
+					SDL_SetRenderDrawColor(prender, 0, 0, 0, 255);
+					break;
+				case 1:
+					SDL_SetRenderDrawColor(prender, 0, 0, 0, 128);
 					break;
 			}
 			SDL_RenderFillRect(prender, &cellRect);
@@ -137,10 +159,11 @@ void draw_grid(uint8_t grid[SIZE][SIZE], SDL_Renderer *prender){
 
 int main(int argc, char *argv[])
 {
+	SDL_Init(SDL_INIT_VIDEO);
 	SDL_Window *pwindow = SDL_CreateWindow("physics sim", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
 	SDL_Renderer *prenderer = SDL_CreateRenderer(pwindow, -1, SDL_RENDERER_ACCELERATED);
+	SDL_SetRenderDrawBlendMode(prenderer, SDL_BLENDMODE_BLEND);
 
-	SDL_Init(SDL_INIT_VIDEO);
 	struct player currPlayer;
 	currPlayer.x = 5;
 	currPlayer.y = 5;
@@ -154,7 +177,7 @@ int main(int argc, char *argv[])
 
 	uint8_t vision_matrix[SIZE][SIZE] = {0};
 
-	calculate_vision(matrix, &currPlayer);
+	calculate_vision(vision_matrix, &currPlayer);
 
 	int running = 1;
 
@@ -168,7 +191,7 @@ int main(int argc, char *argv[])
 
 			if (event.type == SDL_KEYDOWN) {
 				move_player(&currPlayer, matrix, event.key.keysym.sym);
-				calculate_vision(matrix, &currPlayer);
+				calculate_vision(vision_matrix, &currPlayer);
 			}
 
 		}
@@ -179,6 +202,7 @@ int main(int argc, char *argv[])
 		//SDL_SetRenderDrawColor(prenderer, 0xff, 0xff, 0xff, 0xff);
 		//SDL_RenderFillRect(prenderer, &rect);
 		draw_grid(matrix, prenderer);
+		draw_vision(vision_matrix, prenderer);
 
 		SDL_RenderPresent(prenderer);
 		clock_t end = clock();
