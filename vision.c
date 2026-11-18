@@ -31,27 +31,28 @@ void setCell(uint8_t grid[SIZE][SIZE], int row, int col, uint8_t value) {
     }
 }
 
-void move_rect(SDL_Rect *prect, SDL_KeyCode key) {
+void move_player(struct player *pplayer, uint8_t matrix[SIZE][SIZE], SDL_KeyCode key) {
+	int old_x = pplayer->x;
+	int old_y = pplayer->y;
 	switch (key) {
 		case SDLK_w:
-			prect->y -= 10;
-			printf("moving with w...\n");
+			pplayer->y -= 1;
 			break;
 		case SDLK_a:
-			prect->x -= 10;
-			printf("moving with a...\n");
+			pplayer->x -= 1;
 			break;
 		case SDLK_s:
-			prect->y += 10;
-			printf("moving with s...\n");
+			pplayer->y += 1;
 			break;
 		case SDLK_d:
-			prect->x += 10;
-			printf("moving with d...\n");
+			pplayer->x += 1;
 			break;
 		default:
 			break;
 	}
+
+	matrix[old_x][old_y] = 0;
+	matrix[pplayer->x][pplayer->y] = 2;
 }
 
 void draw_grid(uint8_t grid[SIZE][SIZE], SDL_Renderer *prender){
@@ -70,6 +71,9 @@ void draw_grid(uint8_t grid[SIZE][SIZE], SDL_Renderer *prender){
 				case 1:
 					SDL_SetRenderDrawColor(prender, 255, 255, 255, 255);
 					break;
+				case 2:
+					SDL_SetRenderDrawColor(prender, 255, 0, 0, 255);
+					break;
 			}
 			SDL_RenderFillRect(prender, &cellRect);
 		}
@@ -82,9 +86,6 @@ int main(int argc, char *argv[])
 	SDL_Renderer *prenderer = SDL_CreateRenderer(pwindow, -1, SDL_RENDERER_ACCELERATED);
 
 	SDL_Init(SDL_INIT_VIDEO);
-
-	SDL_Rect rect = {100, 100, 100, 100};
-
 	struct player currPlayer;
 	currPlayer.x = 5;
 	currPlayer.y = 5;
@@ -92,6 +93,7 @@ int main(int argc, char *argv[])
 
 	//0 is no vision, 1 is vision, 2 is player
 	uint8_t matrix[SIZE][SIZE] = {0};
+	matrix[currPlayer.x][currPlayer.y] = 2;
 
 	setCell(matrix, 0, 0, 1);
 	setCell(matrix, 0, 4, 1);
@@ -109,7 +111,7 @@ int main(int argc, char *argv[])
 			} 
 
 			if (event.type == SDL_KEYDOWN) {
-				move_rect(&rect, event.key.keysym.sym);
+				move_player(&currPlayer, matrix, event.key.keysym.sym);
 			}
 
 		}
