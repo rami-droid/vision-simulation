@@ -6,8 +6,7 @@
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <sys/types.h>
 #include <threads.h>
 #include <time.h>
 #include <unistd.h>
@@ -31,6 +30,55 @@ void setCell(uint8_t grid[SIZE][SIZE], int row, int col, uint8_t value) {
     }
 }
 
+int is_in_center(int col, int row, struct player *pplayer){
+	int center_x = pplayer->x;
+	int center_y = pplayer->y;
+
+	int dist_squared = pow((col - center_x), 2) + pow((row - center_y), 2);
+	int r_squared = pow(pplayer->vision_rad, 2);
+
+	if (dist_squared <= r_squared) {
+		return 1;
+	}
+
+	return 0;
+}
+
+void calculate_vision(uint8_t grid[SIZE][SIZE], struct player *pplayer) {
+
+	for (int i = 0; i < SIZE; i++) {
+		for (int j = 0; j < SIZE; j++) {
+			if (grid[i][j] != 2) {
+				grid[i][j] = 0;
+			}
+		}
+	}
+
+	int start_row = pplayer->y - pplayer->vision_rad;
+	int end_row   = pplayer->y + pplayer->vision_rad;
+
+	int start_col = pplayer->x - pplayer->vision_rad;
+	int end_col   = pplayer->x + pplayer->vision_rad;
+
+	//clamp boundaries
+	if (start_row < 0) start_row = 0;
+	if (start_col < 0) start_col = 0;
+
+	if (end_row >= SIZE) end_row = SIZE - 1;
+	if (end_col >= SIZE) end_col = SIZE - 1;
+
+	for (int i = start_row; i <= end_row; i++) {
+		for (int j = start_col; j <= end_col; j++) {
+
+			if (is_in_center(j, i, pplayer)) {
+			if (grid[i][j] != 2) {
+				grid[i][j] = 1;
+			}
+			}
+		}
+	}
+}
+
 void move_player(struct player *pplayer, uint8_t matrix[SIZE][SIZE], SDL_KeyCode key) {
 	int old_x = pplayer->x;
 	int old_y = pplayer->y;
@@ -51,8 +99,8 @@ void move_player(struct player *pplayer, uint8_t matrix[SIZE][SIZE], SDL_KeyCode
 			break;
 	}
 
-	matrix[old_x][old_y] = 0;
-	matrix[pplayer->x][pplayer->y] = 2;
+	matrix[old_y][old_x] = 0;
+	matrix[pplayer->y][pplayer->x] = 2;
 }
 
 void draw_grid(uint8_t grid[SIZE][SIZE], SDL_Renderer *prender){
@@ -62,8 +110,9 @@ void draw_grid(uint8_t grid[SIZE][SIZE], SDL_Renderer *prender){
 	cellRect.h = HEIGHT/SIZE;
 	for (int i = 0; i<SIZE; i++) {
 		for (int j = 0; j<SIZE; j++) {
-			cellRect.x = i * WIDTH/SIZE;
-			cellRect.y = j * HEIGHT/SIZE;
+			cellRect.x = j * WIDTH/SIZE;
+			cellRect.y = i * HEIGHT/SIZE;
+
 			switch (grid[i][j]) {
 				case 0:
 					SDL_SetRenderDrawColor(prender, 0, 0, 0, 255);
@@ -89,15 +138,14 @@ int main(int argc, char *argv[])
 	struct player currPlayer;
 	currPlayer.x = 5;
 	currPlayer.y = 5;
+	currPlayer.vision_rad = 5;
 
 
 	//0 is no vision, 1 is vision, 2 is player
 	uint8_t matrix[SIZE][SIZE] = {0};
-	matrix[currPlayer.x][currPlayer.y] = 2;
+	matrix[currPlayer.y][currPlayer.x] = 2;
 
-	setCell(matrix, 0, 0, 1);
-	setCell(matrix, 0, 4, 1);
-	setCell(matrix, 23, 4, 1);
+	uint8_t vision_matrix[SIZE][SIZE] = {0};
 
 
 	int running = 1;
@@ -112,6 +160,7 @@ int main(int argc, char *argv[])
 
 			if (event.type == SDL_KEYDOWN) {
 				move_player(&currPlayer, matrix, event.key.keysym.sym);
+				calculate_vision(matrix, &currPlayer);
 			}
 
 		}
