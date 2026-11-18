@@ -11,3 +11,10 @@ cd vision-simulation
 gcc vision.c -o vision `sdl2-config --cflags --libs` -lm
 ./vision
 ```
+
+## TODO
+**this is for me mainly** 
+- walls
+- Line of sight
+- more vision points (like wards type shit)
+
