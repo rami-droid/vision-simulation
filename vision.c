@@ -100,6 +100,12 @@ void move_player(struct player *pplayer, uint8_t matrix[SIZE][SIZE], SDL_KeyCode
 	}
 
 	matrix[old_y][old_x] = 0;
+
+	if (pplayer->y < 0) pplayer->y = 0;
+	if (pplayer->x < 0) pplayer->x = 0;
+
+	if (pplayer->y > SIZE) pplayer->y = SIZE;
+	if (pplayer->x > SIZE) pplayer->x = SIZE;
 	matrix[pplayer->y][pplayer->x] = 2;
 }
 
@@ -141,12 +147,14 @@ int main(int argc, char *argv[])
 	currPlayer.vision_rad = 5;
 
 
+
 	//0 is no vision, 1 is vision, 2 is player
 	uint8_t matrix[SIZE][SIZE] = {0};
 	matrix[currPlayer.y][currPlayer.x] = 2;
 
 	uint8_t vision_matrix[SIZE][SIZE] = {0};
 
+	calculate_vision(matrix, &currPlayer);
 
 	int running = 1;
 

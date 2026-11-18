@@ -4,10 +4,10 @@ this is a simple simulation of vision systems, for example what you see in leagu
 ## controls
 WASD to move and thats it.
 
-## compilation instructions
+## compilation and running instructions
 ```
 git clone https://github.com/rami-droid/vision-simulation
 cd vision-simulation
-gcc vision.c -o vision `sdl2-config --cflags --libs`
+gcc vision.c -o vision `sdl2-config --cflags --libs` -lm
 ./vision
 ```
