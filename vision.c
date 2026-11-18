@@ -3,11 +3,13 @@
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <threads.h>
+#include <time.h>
 #include <unistd.h>
 #include <SDL2/SDL.h>
 
@@ -15,6 +17,13 @@ const int WIDTH = 1024;
 const int HEIGHT = 1024;
 
 #define SIZE 128
+#define NSMULT 1000
+
+struct player{
+	int x;
+	int y;
+	int vision_rad;
+};
 
 void setCell(uint8_t grid[SIZE][SIZE], int row, int col, uint8_t value) {
     if (row >= 0 && row < SIZE && col >= 0 && col < SIZE) {
@@ -76,6 +85,10 @@ int main(int argc, char *argv[])
 
 	SDL_Rect rect = {100, 100, 100, 100};
 
+	struct player currPlayer;
+	currPlayer.x = 5;
+	currPlayer.y = 5;
+
 
 	//0 is no vision, 1 is vision, 2 is player
 	uint8_t matrix[SIZE][SIZE] = {0};
@@ -101,12 +114,18 @@ int main(int argc, char *argv[])
 
 		}
 
+		clock_t start = clock();
+
 		SDL_RenderClear(prenderer);
 		//SDL_SetRenderDrawColor(prenderer, 0xff, 0xff, 0xff, 0xff);
 		//SDL_RenderFillRect(prenderer, &rect);
 		draw_grid(matrix, prenderer);
 
 		SDL_RenderPresent(prenderer);
+		clock_t end = clock();
+		double time_ms = ((double)(end - start) / CLOCKS_PER_SEC) * 1000.0;
+		
+		usleep((16 - time_ms) * NSMULT);
 		
 	}
 	return 0;
